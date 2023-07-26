@@ -3,11 +3,13 @@ package com.example.weatherapp;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -17,6 +19,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -29,6 +32,8 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.squareup.picasso.Picasso;
@@ -41,19 +46,25 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
-private RelativeLayout homeRL;
-private ProgressBar loadingPB;
-private TextView cityNameTV,temperatureTV,conditionTV;
-private RecyclerView weatherRV;
-private TextInputEditText cityEdt;
-private ImageView backIV,searchIV,iconIV;
-private ArrayList<WeatherRVmodal> weatherRVModalArrayList;
-private WeatherRVAdapter weatherRVAdapter;
-private LocationManager locationManager;
-private int PERMISSION_CODE = 1;
-private String cityName;
+    FusedLocationProviderClient fusedLocationProviderClient;
+    private RelativeLayout homeRL;
+    private ProgressBar loadingPB;
+    private TextView cityNameTV,temperatureTV,conditionTV;
+    private RecyclerView weatherRV;
+    private TextInputEditText cityEdt;
+    private ImageView backIV,searchIV,iconIV;
+    private ArrayList<WeatherRVmodal> weatherRVModalArrayList;
+    private WeatherRVAdapter weatherRVAdapter;
+    private int PERMISSION_CODE = 200;
+    private String cityName="Sfax";
+    private Double lat,lon;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,18 +77,13 @@ private String cityName;
         conditionTV= findViewById(R.id.idTVCondition);
         weatherRV= findViewById(R.id.idRVWeather);
         cityEdt= findViewById(R.id.idEdtCity);
-        backIV= findViewById(R.id.idIVBack);
+         backIV= findViewById(R.id.idIVBack);
         searchIV= findViewById(R.id.idIVSearch);
         iconIV= findViewById(R.id.idIVIcon);
         weatherRVModalArrayList = new ArrayList<>();
         weatherRVAdapter = new WeatherRVAdapter(this,weatherRVModalArrayList);
         weatherRV.setAdapter(weatherRVAdapter);
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if(ActivityCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION)!= PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},PERMISSION_CODE);
-        }
-        Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        cityName = getCityName(location.getLongitude(),location.getLatitude());
+        final Button moreBtn = findViewById(R.id.ViewMore);
         getWeatherInfo(cityName);
         searchIV.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -86,47 +92,55 @@ private String cityName;
                 if(city.isEmpty()){
                     Toast.makeText(MainActivity.this,"Please Enter City Name",Toast.LENGTH_SHORT).show();
                 }else{
-                    cityNameTV.setText(cityName);
+                    city = Character.toUpperCase(city.charAt(0))+ city.substring(1);
+                    cityNameTV.setText(city);
                     getWeatherInfo(city);
                 }
+            }
+        });
+        moreBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String city =cityEdt.getText().toString();
+                city = Character.toUpperCase(city.charAt(0))+ city.substring(1);
+                if(city.isEmpty()){
+                    city ="Sfax";
+                }
+                Intent intent = new Intent(MainActivity.this,MoreActivity.class);
+                intent.putExtra("city Name",city);
+                startActivity(intent);
             }
         });
 
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode==PERMISSION_CODE){
-            if(grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED){
-                Toast.makeText(MainActivity.this,"Permission granted ..",Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        }
-    }
 
-    private  String getCityName(double longitude, double latitude){
-        String cityName="Not found";
-        Geocoder gcd = new Geocoder(getBaseContext(), Locale.getDefault());
-        try{
-            List<Address> addresses = gcd.getFromLocation(latitude,longitude,10);
-            for(Address adr : addresses){
-                if(adr != null){
-                    String city = adr.getLocality();
-                    if(city!=null && !city.equals("")){
-                        cityName=city;
-                    }
-                }else{
-                    Log.d("TAG","CITY NOT FOUND");
-                    Toast.makeText(this,"User City Not Found",Toast.LENGTH_SHORT).show();
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return cityName;
+   /* public static void checkWeather(String city) throws IOException {
+        String apiKey = "eba09a1b0fbf525e99e3534d1a833edd";
+        String url = "https://api.openweathermap.org/data/2.5/weather?q=" + city + "&units=metric&appid=" + apiKey;
 
-    }
+        URL weatherURL = new URL(url);
+        HttpURLConnection connection = (HttpURLConnection) weatherURL.openConnection();
+        connection.setRequestMethod("GET");
+
+        int responseCode = connection.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String line;
+            StringBuilder response = new StringBuilder();
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+
+            // Process the weather data
+            System.out.println(response.toString());
+        } else {
+            throw new IOException("No weather found.");
+        }
+    }*/
+
+
     private void getWeatherInfo(String cityName){
         String url = "http://api.weatherapi.com/v1/forecast.json?key=579507948c43482281d92359232006 &q="+ cityName +"&days=1&aqi=yes&alerts=yes";
         cityNameTV.setText(cityName);
@@ -138,17 +152,27 @@ private String cityName;
                 homeRL.setVisibility(View.VISIBLE);
                 weatherRVModalArrayList.clear();
                 try{
-                String temperature = response.getJSONObject("current").getString("temp_c");
+                    String temperature = response.getJSONObject("current").getString("temp_c");
                     temperatureTV.setText(temperature+"°c");
-                    int isDay = response.getJSONObject("current").getInt("is_day");
+                    /*int isDay = response.getJSONObject("current").getInt("is_day");*/
+                    lat= response.getJSONObject("location").getDouble("lat");
+                    lon= response.getJSONObject("location").getDouble("lon");
+                    Log.d("latitude est :",String.valueOf(lat));
+                    Log.d("longitude est :",String.valueOf(lon));
                     String condition= response.getJSONObject("current").getJSONObject("condition").getString("text");
                     String conditionIcon= response.getJSONObject("current").getJSONObject("condition").getString("icon");
-                    Picasso.get().load("http:".concat(conditionIcon)).into(iconIV);
+                    int targetWidth = 270;
+                    int targetHeight = 270;
+
+                    Picasso.get()
+                            .load("http:".concat(conditionIcon))
+                            .resize(targetWidth, targetHeight)
+                            .into(iconIV);
                     conditionTV.setText(condition);
-                    if(isDay == 1){
-                        Picasso.get().load("https://images.unsplash.com/photo-1532087912058-22332fec7847?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=387&q=80");
+                    /*if(isDay == 1){
+                        Picasso.get().load("");
                     }else
-                        Picasso.get().load("https://images.unsplash.com/photo-1507400492013-162706c8c05e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8bmlnaHR8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60");
+                        Picasso.get().load("");*/
 
                     JSONObject forecastObj = response.getJSONObject("forecast");
                     JSONObject forecastO = forecastObj.getJSONArray("forecastday").getJSONObject(0);
@@ -180,6 +204,9 @@ private String cityName;
 
 
     }
+
+
+
 
 
 }

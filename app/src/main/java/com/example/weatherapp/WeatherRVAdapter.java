@@ -19,11 +19,11 @@ import java.util.Date;
 
 public class WeatherRVAdapter extends RecyclerView.Adapter<WeatherRVAdapter.ViewHolder> {
     private  Context context;
-    private ArrayList<WeatherRVmodal> weatherRVmodalArrayList;
+    private ArrayList<WeatherRVmodal> weatherRVModalArrayList;
 
-    public WeatherRVAdapter(Context context, ArrayList<WeatherRVmodal> weatherRVmodalArrayList) {
+    public WeatherRVAdapter(Context context, ArrayList<WeatherRVmodal> weatherRVModalArrayList) {
         this.context = context;
-        this.weatherRVmodalArrayList = weatherRVmodalArrayList;
+        this.weatherRVModalArrayList = weatherRVModalArrayList;
     }
 
     @NonNull
@@ -35,12 +35,12 @@ public class WeatherRVAdapter extends RecyclerView.Adapter<WeatherRVAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull WeatherRVAdapter.ViewHolder holder, int position) {
-        WeatherRVmodal modal = weatherRVmodalArrayList.get(position);
-        holder.temperatureTV.setText(modal.getTemperature() + "°c");
+        WeatherRVmodal modal = weatherRVModalArrayList.get(position);
+        holder.temperatureTV.setText( modal.getTemperature()+"°c");
         Picasso.get().load("http:".concat(modal.getIcon() )).into(holder.conditionIV);
-        holder.windTV.setText(modal.getWindSpeed() + "km/h");
+        holder.windTV.setText(modal.getWindSpeed()+" km/h");
         SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd hh:mm");
-        SimpleDateFormat output = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+        SimpleDateFormat output = new SimpleDateFormat("dd-MM-yyyy HH:mm");
         try {
             Date t = input.parse(modal.getTime());
             holder.timeTV.setText(output.format(t));
@@ -52,7 +52,7 @@ public class WeatherRVAdapter extends RecyclerView.Adapter<WeatherRVAdapter.View
 
     @Override
     public int getItemCount() {
-        return weatherRVmodalArrayList.size();
+        return weatherRVModalArrayList.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

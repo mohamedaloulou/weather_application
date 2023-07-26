@@ -3,9 +3,14 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/MOHAMED/AndroidStudioProjects/WeatherApp/app/src/main/res/drawable/button_card.xml" value="0.2545" />
         <entry key="..\:/Users/MOHAMED/AndroidStudioProjects/WeatherApp/app/src/main/res/drawable/card_back.xml" value="0.14" />
-        <entry key="..\:/Users/MOHAMED/AndroidStudioProjects/WeatherApp/app/src/main/res/layout/activity_main.xml" value="0.25" />
-        <entry key="..\:/Users/MOHAMED/AndroidStudioProjects/WeatherApp/app/src/main/res/layout/weather_rv_item.xml" value="0.24895833333333334" />
+        <entry key="..\:/Users/MOHAMED/AndroidStudioProjects/WeatherApp/app/src/main/res/layout/activity_main.xml" value="0.14035087719298245" />
+        <entry key="..\:/Users/MOHAMED/AndroidStudioProjects/WeatherApp/app/src/main/res/layout/activity_more.xml" value="0.14869888475836432" />
+        <entry key="..\:/Users/MOHAMED/AndroidStudioProjects/WeatherApp/app/src/main/res/layout/second_activity.xml" value="0.24895833333333334" />
+        <entry key="..\:/Users/MOHAMED/AndroidStudioProjects/WeatherApp/app/src/main/res/layout/weather_rv_item.xml" value="0.2" />
+        <entry key="..\:/Users/MOHAMED/AndroidStudioProjects/WeatherApp/app/src/main/res/layout/weather_rv_item_more.xml" value="0.4" />
+        <entry key="..\:/Users/MOHAMED/AndroidStudioProjects/WeatherApp/app/src/main/res/layout/weather_rv_more_item.xml" value="0.264" />
       </map>
     </option>
   </component>
