@@ -1,7 +1,6 @@
 package com.example.weatherapp;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
@@ -11,6 +10,7 @@ import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -41,8 +41,12 @@ import com.squareup.picasso.Picasso;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.tensorflow.lite.Interpreter;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -65,6 +69,9 @@ public class MainActivity extends AppCompatActivity {
     private int PERMISSION_CODE = 200;
     private String cityName="Sfax";
     private Double lat,lon;
+    private Interpreter tflite;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,6 +92,12 @@ public class MainActivity extends AppCompatActivity {
         weatherRV.setAdapter(weatherRVAdapter);
         final Button moreBtn = findViewById(R.id.ViewMore);
         getWeatherInfo(cityName);
+        /*try {
+            tflite = new Interpreter(loadModelFile("model.tflite"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+
         searchIV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -98,6 +111,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+
         moreBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -106,13 +121,16 @@ public class MainActivity extends AppCompatActivity {
                 if(city.isEmpty()){
                     city ="Sfax";
                 }
-                Intent intent = new Intent(MainActivity.this,MoreActivity.class);
+                Intent intent = new Intent(MainActivityivity.this,MoreActivity.class);
                 intent.putExtra("city Name",city);
                 startActivity(intent);
             }
         });
 
+
     }
+
+
 
 
    /* public static void checkWeather(String city) throws IOException {
@@ -153,6 +171,8 @@ public class MainActivity extends AppCompatActivity {
                 weatherRVModalArrayList.clear();
                 try{
                     String temperature = response.getJSONObject("current").getString("temp_c");
+                    float currentTemperature = Float.parseFloat(temperature); // Convertir en float si nécessaire
+
                     temperatureTV.setText(temperature+"°c");
                     /*int isDay = response.getJSONObject("current").getInt("is_day");*/
                     lat= response.getJSONObject("location").getDouble("lat");
